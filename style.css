@@ -239,3 +239,23 @@ footer { margin-top: clamp(80px, 12vw, 140px); background: var(--bg-alt); border
   .js .reveal, .js .reveal-scale { opacity: 1; transform: none; transition: none; }
   .pill { transition: none; }
 }
+
+/* ---------- Reading pages (privacy, terms, delete account) ---------- */
+main > section.doc { max-width: 720px; margin: 0 auto; padding: clamp(56px, 9vw, 110px) 16px 0; text-align: left; }
+.doc h1 { font-size: clamp(40px, 7vw, 64px); }
+.doc .lede { margin: 18px 0 28px; }
+.doc h2 { font-size: clamp(24px, 3.4vw, 32px); margin: 48px 0 12px; }
+.doc p, .doc li { font-size: 17px; line-height: 1.55; }
+.doc p { margin: 0 0 14px; }
+.doc ol, .doc ul { margin: 0 0 14px; padding-left: 22px; }
+.doc li { margin-bottom: 8px; }
+.doc .muted { color: var(--muted); }
+.doc .card { margin: 28px 0 0; padding: 22px 24px; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); }
+.doc .card p:last-child { margin-bottom: 0; }
+.doc .mail { font-size: 19px; font-weight: 600; overflow-wrap: anywhere; }
+.doc table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 16px; }
+.doc th, .doc td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+.doc th { font-weight: 600; }
+@media (max-width: 560px) { .doc table, .doc tbody, .doc tr, .doc td { display: block; } .doc thead { display: none; } .doc td { border: 0; padding: 2px 0; } .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); } .doc td:first-child { font-weight: 600; } }
+.doc .updated { font-size: 14px; color: var(--muted); }
+.foot-inner .foot-links { display: flex; gap: 16px; }

@@ -11,25 +11,6 @@
 <link rel="icon" href="../assets/Mica.ico">
 <link rel="apple-touch-icon" href="../assets/Mica.png">
 <link rel="stylesheet" href="../style.css">
-<style>
-  /* Plain reading page: left-aligned prose on top of the site's tokens. */
-  main > section.doc { max-width: 720px; margin: 0 auto; padding: clamp(56px, 9vw, 110px) 16px 0; text-align: left; }
-  .doc h1 { font-size: clamp(40px, 7vw, 64px); }
-  .doc .lede { margin: 18px 0 28px; }
-  .doc h2 { font-size: clamp(24px, 3.4vw, 32px); margin: 48px 0 12px; }
-  .doc p, .doc li { font-size: 17px; line-height: 1.55; }
-  .doc p { margin: 0 0 14px; }
-  .doc ol, .doc ul { margin: 0 0 14px; padding-left: 22px; }
-  .doc li { margin-bottom: 8px; }
-  .doc .muted { color: var(--muted); }
-  .doc .card { margin: 28px 0 0; padding: 22px 24px; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); }
-  .doc .card p:last-child { margin-bottom: 0; }
-  .doc .mail { font-size: 19px; font-weight: 600; overflow-wrap: anywhere; }
-  .doc table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 16px; }
-  .doc th, .doc td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
-  .doc th { font-weight: 600; }
-  @media (max-width: 560px) { .doc table, .doc tbody, .doc tr, .doc td { display: block; } .doc thead { display: none; } .doc td { border: 0; padding: 2px 0; } .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); } .doc td:first-child { font-weight: 600; } }
-</style>
 </head>
 <body>
 <header class="nav">
@@ -39,6 +20,7 @@
       <a href="#request">Request deletion</a>
       <a href="#data">What is deleted</a>
       <a href="#vi" lang="vi">Tiếng Việt</a>
+      <a href="../privacy/">Privacy</a>
     </nav>
     <a class="pill pill-small" href="../#download">Download</a>
   </div>
@@ -91,6 +73,8 @@
     <p>Your browsing history, bookmarks, open tabs, cookies and downloads never reach our server, so there is nothing for us to delete. Remove them in Mica with <strong>Settings → Clear browsing data</strong>, or by uninstalling the app.</p>
     <p class="muted">Signing out of Mica on a device ends that device's session but doesn't delete the account. To delete the account and the data above, send the request.</p>
 
+    <p class="muted">More detail is in the <a class="link" href="../privacy/">Privacy Policy</a> and the <a class="link" href="../terms/">Terms of Service</a>.</p>
+
     <h2 id="vi" lang="vi">Tiếng Việt</h2>
     <div lang="vi">
       <p>Để xoá tài khoản Mica (trình duyệt của lessnoise) và dữ liệu đi kèm, mở <a class="link" href="https://the-api.lessnoise.online/v1/account/delete">liên kết này</a>, đăng nhập bằng tài khoản Discord bạn dùng trong Mica rồi chọn <strong>Delete account</strong>. Tài khoản bị xoá ngay lập tức. Nếu không còn đăng nhập được Discord, gửi email tới <a class="link" href="mailto:accounts@lessnoise.online?subject=Delete%20my%20Mica%20account">accounts@lessnoise.online</a> kèm tên Discord; chúng tôi xác minh và xoá trong vòng 30 ngày.</p>
@@ -104,7 +88,7 @@
   <div class="foot-inner">
     <span class="wordmark">Mica.</span>
     <span>Less noise. More internet.</span>
-    <a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a>
+    <span class="foot-links"><a class="link" href="../privacy/">Privacy</a><a class="link" href="../terms/">Terms</a><a class="link" href="../delete-account/">Delete account</a><a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a></span>
   </div>
 </footer>
 </body>
