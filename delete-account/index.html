@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your Mica account</title>
+<meta name="description" content="How to delete your Mica account and the data stored with it. Mica is the browser by lessnoise.">
+<link rel="canonical" href="https://lessnoise.online/delete-account">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../assets/Mica.ico">
+<link rel="apple-touch-icon" href="../assets/Mica.png">
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* Plain reading page: left-aligned prose on top of the site's tokens. */
+  main > section.doc { max-width: 720px; margin: 0 auto; padding: clamp(56px, 9vw, 110px) 16px 0; text-align: left; }
+  .doc h1 { font-size: clamp(40px, 7vw, 64px); }
+  .doc .lede { margin: 18px 0 28px; }
+  .doc h2 { font-size: clamp(24px, 3.4vw, 32px); margin: 48px 0 12px; }
+  .doc p, .doc li { font-size: 17px; line-height: 1.55; }
+  .doc p { margin: 0 0 14px; }
+  .doc ol, .doc ul { margin: 0 0 14px; padding-left: 22px; }
+  .doc li { margin-bottom: 8px; }
+  .doc .muted { color: var(--muted); }
+  .doc .card { margin: 28px 0 0; padding: 22px 24px; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); }
+  .doc .card p:last-child { margin-bottom: 0; }
+  .doc .mail { font-size: 19px; font-weight: 600; overflow-wrap: anywhere; }
+  .doc table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 16px; }
+  .doc th, .doc td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+  .doc th { font-weight: 600; }
+  @media (max-width: 560px) { .doc table, .doc tbody, .doc tr, .doc td { display: block; } .doc thead { display: none; } .doc td { border: 0; padding: 2px 0; } .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); } .doc td:first-child { font-weight: 600; } }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../" aria-label="Mica home"><img src="../assets/Mica.png" alt="" width="22" height="22"><span>Mica.</span></a>
+    <nav aria-label="Sections">
+      <a href="#request">Request deletion</a>
+      <a href="#data">What is deleted</a>
+      <a href="#vi" lang="vi">Tiếng Việt</a>
+    </nav>
+    <a class="pill pill-small" href="../#download">Download</a>
+  </div>
+</header>
+
+<main>
+  <section class="doc">
+    <p class="eyebrow">Account</p>
+    <h1>Delete your Mica account.</h1>
+    <p class="lede">How to delete your account for Mica, the browser by lessnoise, and everything stored with it.</p>
+
+    <p>Mica works without an account. The account is optional: it only powers <strong>Passwords &amp; sync</strong> and <strong>Send to device</strong>, and you sign in to it with Discord. This page applies to Mica on Android and on Windows, which share the same account.</p>
+
+    <h2 id="request">How to request deletion</h2>
+    <ol>
+      <li>Send an email to <a class="link" href="mailto:accounts@lessnoise.online?subject=Delete%20my%20Mica%20account">accounts@lessnoise.online</a> with the subject <strong>Delete my Mica account</strong>.</li>
+      <li>In the email, give the <strong>Discord username</strong> you sign in to Mica with (and your Discord user ID if you know it).</li>
+      <li>We may reply and ask you to confirm the request from that Discord account, so that nobody can delete an account that isn't theirs.</li>
+      <li>We delete the account and its data <strong>within 30 days</strong> of your request and reply to tell you it's done.</li>
+    </ol>
+    <div class="card">
+      <p class="muted">Email for deletion requests</p>
+      <p class="mail"><a class="link" href="mailto:accounts@lessnoise.online?subject=Delete%20my%20Mica%20account">accounts@lessnoise.online</a></p>
+      <p class="muted">You don't need the app installed to make a request.</p>
+    </div>
+
+    <h2 id="data">What is deleted</h2>
+    <p>When we delete your account, we remove everything our server stores for it:</p>
+    <table>
+      <thead><tr><th>Data</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><td>Account</td><td>Your Discord user ID, username, avatar, banner and accent color, copied from Discord when you sign in.</td></tr>
+        <tr><td>Password vault</td><td>Your saved passwords. They are end-to-end encrypted on your device before upload, so the server only holds data it cannot read.</td></tr>
+        <tr><td>Synced settings</td><td>The on/off preferences you chose to sync between devices.</td></tr>
+        <tr><td>Devices</td><td>The name you gave each Mica install and when it was last seen, used by Send to device.</td></tr>
+        <tr><td>Sent tabs</td><td>The address and title of tabs sent to another device that haven't been picked up yet.</td></tr>
+        <tr><td>Sign-in sessions</td><td>Tokens that keep your devices signed in. Deleting them signs out every device.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>What is kept, and for how long</h2>
+    <ul>
+      <li><strong>Nothing is kept on purpose.</strong> We don't keep a copy of your account or vault after deletion.</li>
+      <li>Our database host (Cloudflare) keeps a rolling 30-day history for disaster recovery. Deleted data drops out of it within 30 days and is never restored to your account.</li>
+      <li>Short-lived records expire on their own whether or not you ask: sign-in requests after 10 minutes, rate-limit counters after about a minute, and unused sign-in sessions after 30 days. Rate-limit records use a one-way hash of your IP address, not the address itself.</li>
+    </ul>
+
+    <h2>Data that stays on your device</h2>
+    <p>Your browsing history, bookmarks, open tabs, cookies and downloads never reach our server, so there is nothing for us to delete. Remove them in Mica with <strong>Settings → Clear browsing data</strong>, or by uninstalling the app.</p>
+    <p class="muted">Signing out of Mica on a device ends that device's session but doesn't delete the account. To delete the account and the data above, send the request.</p>
+
+    <h2 id="vi" lang="vi">Tiếng Việt</h2>
+    <div lang="vi">
+      <p>Để xoá tài khoản Mica (trình duyệt của lessnoise) và dữ liệu đi kèm, hãy gửi email tới <a class="link" href="mailto:accounts@lessnoise.online?subject=Delete%20my%20Mica%20account">accounts@lessnoise.online</a> với tiêu đề <strong>Delete my Mica account</strong>, kèm tên người dùng Discord bạn dùng để đăng nhập Mica. Chúng tôi có thể nhờ bạn xác nhận từ tài khoản Discord đó.</p>
+      <p>Trong vòng 30 ngày, chúng tôi xoá: tài khoản (ID, tên, ảnh đại diện Discord), kho mật khẩu đã mã hoá đầu-cuối, cài đặt đồng bộ, danh sách thiết bị, các tab đã gửi và phiên đăng nhập. Không có dữ liệu nào được giữ lại; bản sao lưu của Cloudflare tự hết hạn sau 30 ngày.</p>
+      <p>Lịch sử, dấu trang và tab chỉ nằm trên máy bạn, không bao giờ lên máy chủ. Xoá chúng bằng <strong>Cài đặt → Xoá dữ liệu duyệt web</strong> hoặc gỡ ứng dụng.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span class="wordmark">Mica.</span>
+    <span>Less noise. More internet.</span>
+    <a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a>
+  </div>
+</footer>
+</body>
+</html>
