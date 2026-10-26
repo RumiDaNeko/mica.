@@ -166,61 +166,144 @@
     $("[data-releases]").innerHTML = '<li class="muted">Release notes are unavailable right now.</li>';
   });
 
-  // Close-up intro: as the pinned stage scrolls, a beam of light comes down, the new tab fades in zoomed
-  // into its clock (blurred, then pulled into focus), and the camera pulls back to the whole laptop.
-  (function closeup() {
-    var section = $(".closeup");
-    if (!section || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    section.classList.add("animated");
-    var device = section.querySelector(".closeup-device"), img = device.querySelector("img");
-    var head = section.querySelector(".closeup-head"), caption = section.querySelector(".closeup-caption");
-    var line = section.querySelector(".beam-line"), cone = section.querySelector(".beam-cone"), spot = section.querySelector(".beam-spot");
-    var fx = parseFloat(device.dataset.focusX), fy = parseFloat(device.dataset.focusY);
-    var W, H, focus, zoom, queued = false;
-
+  // Scroll scenes, Apple-style: pinned stages whose pictures move with the scroll position. Each pinned
+  // scene gets p = 0..1 for how far its section has scrolled past. With reduced motion, or without JS,
+  // every scene is a still picture instead.
+  (function scenes() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var darkPage = window.matchMedia("(prefers-color-scheme: dark)");
     function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
     function span(p, a, b) { return clamp((p - a) / (b - a)); }      // 0..1 while p runs from a to b
     function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
     function lerp(a, b, t) { return a + (b - a) * t; }
+    function mix(a, b, t) { return "rgb(" + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], t)); }).join(",") + ")"; }
+    function pinned(section) { var r = section.getBoundingClientRect(); return clamp(-r.top / (r.height - window.innerHeight)); }
+    function fadeUp(el, t) { el.style.opacity = t; el.style.transform = "translateY(" + lerp(16, 0, t) + "px)"; }
+    var list = [];
 
-    function measure() {
-      device.style.transform = "none";
-      var d = device.getBoundingClientRect(), i = img.getBoundingClientRect();
-      W = d.width; H = d.height;
-      focus = { x: i.left - d.left + fx * i.width, y: i.top - d.top + fy * i.height };
-      // Zoom until the clock (about 16% of the picture's width) fills roughly half the screen.
-      zoom = Math.max(2.5, Math.min(5, (0.5 * window.innerWidth) / (0.16 * i.width)));
-      queued = false; render();
-    }
+    // 1. Hero: the laptop starts nearly closed and its lid opens over the first part of the scroll.
+    var lid = $(".hero .lid"), heroDisplay = $(".hero .display");
+    if (lid) list.push({ render: function () {
+      var t = ease(span(window.scrollY, 0, window.innerHeight * .4));
+      lid.style.transform = t < 1 ? "rotateX(" + lerp(-72, 0, t) + "deg)" : "none";
+      heroDisplay.style.filter = t < 1 ? "brightness(" + lerp(.25, 1, t) + ")" : "none";
+    } });
 
-    function render() {
-      queued = false;
-      var r = section.getBoundingClientRect(), travel = r.height - window.innerHeight;
-      var p = clamp(-r.top / travel);
-      var beamIn = span(p, 0, .12), beamOut = span(p, .22, .32);
-      line.style.transform = "scaleY(" + beamIn + ")";
-      line.style.opacity = 1 - beamOut;
-      cone.style.opacity = spot.style.opacity = span(p, .05, .14) * (1 - beamOut);
+    // 2. Close-up: a beam of light comes down, the new tab fades in zoomed into its clock (blurred, then
+    //    pulled into focus), and the camera pulls back to the whole laptop.
+    var closeup = $(".closeup");
+    if (closeup) (function () {
+      closeup.classList.add("animated");
+      var device = closeup.querySelector(".closeup-device"), img = device.querySelector("img");
+      var head = closeup.querySelector(".closeup-head"), caption = closeup.querySelector(".closeup-caption");
+      var line = closeup.querySelector(".beam-line"), cone = closeup.querySelector(".beam-cone"), spot = closeup.querySelector(".beam-spot");
+      var fx = parseFloat(device.dataset.focusX), fy = parseFloat(device.dataset.focusY);
+      var W = 0, H = 0, focus = { x: 0, y: 0 }, zoom = 3;
+      list.push({
+        measure: function () {
+          var keep = device.style.transform;
+          device.style.transform = "none";
+          var d = device.getBoundingClientRect(), i = img.getBoundingClientRect();
+          W = d.width; H = d.height;
+          focus = { x: i.left - d.left + fx * i.width, y: i.top - d.top + fy * i.height };
+          // Zoom until the clock (about 16% of the picture's width) fills roughly half the screen.
+          zoom = Math.max(2.5, Math.min(5, (0.5 * window.innerWidth) / (0.16 * i.width)));
+          device.style.transform = keep;
+        },
+        render: function () {
+          var p = pinned(closeup);
+          var beamIn = span(p, 0, .12), beamOut = span(p, .22, .32);
+          line.style.transform = "scaleY(" + beamIn + ")";
+          line.style.opacity = 1 - beamOut;
+          cone.style.opacity = spot.style.opacity = span(p, .05, .14) * (1 - beamOut);
+          var t = ease(span(p, .32, .82));
+          var s = lerp(zoom, 1, t), cx = lerp(focus.x, W / 2, t), cy = lerp(focus.y, H / 2, t);
+          device.style.transform = "translate(" + (-cx * s) + "px," + (-cy * s) + "px) scale(" + s + ")";
+          device.style.opacity = span(p, .14, .26);
+          var light = span(p, .14, .36);
+          device.style.filter = light < 1 ? "brightness(" + lerp(.35, 1, light) + ") blur(" + lerp(8, 0, light) + "px)" : "none";
+          var headIn = span(p, .16, .24), headOut = span(p, .40, .48);
+          fadeUp(head, headIn); head.style.opacity = headIn * (1 - headOut);
+          fadeUp(caption, span(p, .82, .92));
+        }
+      });
+    })();
 
-      var t = ease(span(p, .32, .82));
-      var s = lerp(zoom, 1, t), cx = lerp(focus.x, W / 2, t), cy = lerp(focus.y, H / 2, t);
-      device.style.transform = "translate(" + (-cx * s) + "px," + (-cy * s) + "px) scale(" + s + ")";
-      device.style.opacity = span(p, .14, .26);
-      var light = span(p, .14, .36);
-      device.style.filter = light < 1 ? "brightness(" + lerp(.35, 1, light) + ") blur(" + lerp(8, 0, light) + "px)" : "none";
+    // 3. Statement: each word lights up as the paragraph moves up the window.
+    var statement = $("[data-words]");
+    if (statement) (function () {
+      var words = statement.textContent.trim().split(/\s+/);
+      statement.textContent = "";
+      var spans = words.map(function (w, i) {
+        var s = document.createElement("span"); s.className = "w"; s.textContent = w;
+        statement.appendChild(s); if (i < words.length - 1) statement.appendChild(document.createTextNode(" "));
+        return s;
+      });
+      list.push({ render: function () {
+        var r = statement.getBoundingClientRect(), vh = window.innerHeight;
+        var lit = Math.round(span(r.top, vh * .8, vh * .4 - r.height) * spans.length);
+        spans.forEach(function (s, i) { s.classList.toggle("lit", i < lit); });
+      } });
+    })();
 
-      var headIn = span(p, .16, .24), headOut = span(p, .40, .48);
-      head.style.opacity = headIn * (1 - headOut);
-      head.style.transform = "translateY(" + lerp(16, 0, headIn) + "px)";
-      var capIn = span(p, .82, .92);
-      caption.style.opacity = capIn;
-      caption.style.transform = "translateY(" + lerp(16, 0, capIn) + "px)";
-    }
-    function queue() { if (!queued) { queued = true; window.requestAnimationFrame(render); } }
+    // 4. Spotlight: Ctrl and K rise and press down, Spotlight opens on the monitor, then the camera moves in.
+    var keys = $(".keys");
+    if (keys) (function () {
+      keys.classList.add("animated");
+      var caps = keys.querySelector(".keycaps"), kbds = Array.prototype.slice.call(caps.querySelectorAll("kbd"));
+      var monitor = keys.querySelector(".keys-monitor"), after = keys.querySelector(".layer-after");
+      var head = keys.querySelector(".keys-head"), caption = keys.querySelector(".keys-caption");
+      monitor.style.transformOrigin = "50% 36%";
+      list.push({ render: function () {
+        var p = pinned(keys);
+        var rise = ease(span(p, .06, .18)), press = span(p, .24, .30), gone = span(p, .36, .44);
+        caps.style.opacity = rise * (1 - gone);
+        caps.style.transform = "translate(-50%," + lerp(-10, -50, rise) + "%) scale(" + lerp(1, .9, gone) + ")";
+        kbds.forEach(function (k) {
+          k.style.transform = "translateY(" + lerp(0, 5, press) + "px)";
+          k.style.boxShadow = press > .5 ? "inset 0 1px 0 rgba(255,255,255,.4), 0 1px 0 rgba(0,0,0,.35), 0 4px 10px -4px rgba(0,0,0,.4)" : "";
+        });
+        after.style.opacity = span(p, .28, .38);
+        var settle = ease(span(p, 0, .2)), zoomIn = ease(span(p, .46, .80));
+        monitor.style.transform = "translate(-50%," + lerp(-50, -66, zoomIn) + "%) scale(" + (lerp(.9, 1, settle) * lerp(1, 1.18, zoomIn)) + ")";
+        monitor.style.filter = after.style.opacity < 1 ? "brightness(" + lerp(.8, 1, +after.style.opacity) + ")" : "none";
+        head.style.opacity = 1 - span(p, .46, .56);
+        fadeUp(caption, span(p, .80, .90));
+      } });
+    })();
 
+    // 5. Themes: a bright edge sweeps across, the dark theme follows it, and (on a light page) the page darkens too.
+    var themes = $(".themes");
+    if (themes) (function () {
+      themes.classList.add("animated");
+      var laptop = themes.querySelector(".themes-laptop"), after = themes.querySelector(".layer-after"), sweep = themes.querySelector(".sweep");
+      var caption = themes.querySelector(".themes-caption"), head = themes.querySelector(".themes-head"), eyebrow = head.querySelector(".eyebrow");
+      list.push({ render: function () {
+        var p = pinned(themes);
+        var wipe = ease(span(p, .22, .70)), edge = lerp(100, 0, wipe);
+        after.style.clipPath = "inset(0 0 0 " + edge + "%)";
+        sweep.style.left = edge + "%";
+        sweep.style.opacity = span(p, .18, .24) * (1 - span(p, .70, .76));
+        laptop.style.transform = "translate(-50%,-50%) scale(" + lerp(.92, 1, ease(span(p, 0, .2))) + ")";
+        if (!darkPage.matches) {
+          themes.style.backgroundColor = mix([251, 251, 253], [0, 0, 0], wipe);
+          themes.style.color = mix([29, 29, 31], [245, 245, 247], wipe);
+          caption.style.color = mix([110, 110, 115], [161, 161, 166], wipe);
+          eyebrow.style.color = mix([107, 79, 143], [201, 179, 234], wipe);
+        } else { themes.style.backgroundColor = themes.style.color = caption.style.color = eyebrow.style.color = ""; }
+        head.style.opacity = 1;
+        fadeUp(caption, span(p, .76, .86));
+      } });
+    })();
+
+    var queued = false;
+    function frame() { queued = false; list.forEach(function (s) { s.render(); }); }
+    function queue() { if (!queued) { queued = true; window.requestAnimationFrame(frame); } }
+    function measure() { list.forEach(function (s) { if (s.measure) s.measure(); }); frame(); }
     window.addEventListener("scroll", queue, { passive: true });
     window.addEventListener("resize", function () { window.requestAnimationFrame(measure); });
-    if (img.complete) measure(); else img.addEventListener("load", measure);
+    window.addEventListener("load", measure);
+    measure();
   })();
 
   // Fade sections in as they scroll into view.

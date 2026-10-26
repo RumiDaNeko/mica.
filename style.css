@@ -99,7 +99,7 @@ h2 { font-size: clamp(36px, 6vw, 64px); line-height: 1.06; }
 main > section.closeup { padding: 0; margin-top: clamp(80px, 12vw, 150px); background: #000; color: #f5f5f7; --metal-1: #5a5a60; --metal-2: #3a3a3e; --metal-3: #1f1f22; --shadow: 0 30px 80px -20px rgba(0, 0, 0, .9); }
 .closeup-sticky { position: relative; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: clamp(72px, 10vw, 120px) 16px; overflow: hidden; }
 .closeup .eyebrow { color: #c9b3ea; }
-.closeup-device { width: min(980px, 86vw); transform-origin: 0 0; }
+.closeup-device { width: min(980px, 86vw, 92vh); transform-origin: 0 0; }
 .closeup-caption { margin: 0; max-width: 560px; font-size: clamp(19px, 2.3vw, 24px); line-height: 1.38; font-weight: 500; color: #a1a1a6; }
 .beam { display: none; }
 /* Scroll-driven version (app.js adds .animated): the stage pins while the section scrolls past. */
@@ -112,6 +112,52 @@ main > section.closeup { padding: 0; margin-top: clamp(80px, 12vw, 150px); backg
 .beam-line { position: absolute; left: 50%; top: 0; width: 2px; height: 46vh; margin-left: -1px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff); box-shadow: 0 0 18px 4px rgba(255, 255, 255, .45); transform-origin: top; transform: scaleY(0); }
 .beam-cone { position: absolute; left: 50%; top: 0; width: 70vw; height: 80vh; margin-left: -35vw; background: radial-gradient(60% 100% at 50% 0%, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 70%); opacity: 0; }
 .beam-spot { position: absolute; left: 50%; top: 46vh; width: 18vw; height: 4vh; margin: -2vh 0 0 -9vw; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); filter: blur(4px); opacity: 0; }
+
+/* ---------- Hero laptop lid (opened by scrolling, see app.js) ---------- */
+.hero .laptop { perspective: 2400px; }
+.hero .lid { transform-origin: 50% 100%; will-change: transform; }
+
+/* ---------- Statement: words light up as you scroll ---------- */
+main > section.statement { max-width: 1000px; margin: 0 auto; text-align: left; }
+.statement-text { margin: 0; font-size: clamp(32px, 5.2vw, 60px); line-height: 1.12; font-weight: 700; letter-spacing: -0.035em; }
+.statement-text .w { opacity: .16; transition: opacity .3s ease; }
+.statement-text .w.lit { opacity: 1; }
+
+/* ---------- Stacked screenshots (before / after) ---------- */
+.layers { position: relative; }
+.layers img { display: block; width: 100%; }
+.layers .layer-after { position: absolute; inset: 0; height: 100%; object-fit: cover; object-position: top left; }
+
+/* ---------- Spotlight keys scene ---------- */
+main > section.keys { background: var(--bg-alt); padding-bottom: clamp(80px, 12vw, 150px); margin-top: clamp(80px, 12vw, 150px); }
+.keys-sticky { display: flex; flex-direction: column; align-items: center; gap: 36px; }
+.keycaps { display: flex; align-items: center; gap: 14px; }
+.keycaps kbd { display: grid; place-items: center; min-width: 84px; height: 84px; padding: 0 22px; border-radius: 16px; font: 600 24px var(--font); color: var(--ink); background: linear-gradient(180deg, #ffffff, #f1f1f4); box-shadow: inset 0 1px 0 #fff, 0 6px 0 #c7c7cc, 0 14px 26px -8px rgba(0, 0, 0, .3); transition: none; }
+.keycaps .plus { font-size: 28px; color: var(--muted); font-weight: 500; }
+.keys-monitor { width: min(880px, 86vw); margin: 0; }
+.keys-caption, .themes-caption { margin: 0; max-width: 600px; font-size: clamp(19px, 2.3vw, 24px); line-height: 1.38; font-weight: 500; color: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  .keycaps kbd { background: linear-gradient(180deg, #3a3a3e, #2c2c2e); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 6px 0 #111113, 0 14px 26px -8px rgba(0, 0, 0, .8); }
+}
+
+/* ---------- Light to dark scene ---------- */
+main > section.themes { margin-top: clamp(80px, 12vw, 150px); padding-bottom: clamp(80px, 12vw, 150px); }
+.themes-sticky { display: flex; flex-direction: column; align-items: center; gap: 36px; }
+.themes-laptop { width: min(940px, 86vw); }
+.sweep { display: none; }
+
+/* ---------- Pinned scenes (app.js adds .animated) ---------- */
+.animated .keys-sticky, .animated .themes-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: block; padding: 0; overflow: hidden; }
+main > section.keys.animated { height: 340vh; padding: 0; }
+main > section.themes.animated { height: 320vh; padding: 0; transition: none; }
+.animated .keys-head, .animated .themes-head { position: absolute; left: 0; right: 0; top: 9vh; padding: 0 16px; z-index: 3; }
+.animated .keycaps { position: absolute; left: 50%; top: 50%; z-index: 4; transform: translate(-50%, -50%); }
+.animated .keys-monitor, .animated .themes-laptop { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); width: min(880px, 84vw, 80vh); will-change: transform; }
+.animated .keys-caption, .animated .themes-caption { position: absolute; left: 0; right: 0; bottom: 6vh; margin: 0 auto; padding: 0 16px; opacity: 0; z-index: 3; }
+/* The Spotlight caption lands over the zoomed screen: fade the screen out behind it. */
+.animated .keys-caption { bottom: 0; max-width: none; padding: 150px max(16px, calc(50% - 320px)) 8vh; background: linear-gradient(to bottom, transparent, var(--bg-alt) 62%); }
+.animated .layer-after { will-change: opacity, clip-path; }
+.animated .sweep { display: block; position: absolute; top: 0; bottom: 0; left: 100%; width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 24px 6px rgba(255, 255, 255, .7), 0 0 80px 20px rgba(201, 179, 234, .45); opacity: 0; z-index: 2; }
 
 /* ---------- Monitor frame ---------- */
 .monitor { max-width: 960px; margin: clamp(44px, 6vw, 72px) auto 0; }

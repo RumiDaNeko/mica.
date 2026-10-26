@@ -107,15 +107,30 @@
     </div>
   </section>
 
-  <!-- Spotlight on a desktop monitor. -->
-  <section id="spotlight" class="showcase">
-    <p class="eyebrow reveal">Spotlight</p>
-    <h2 class="reveal">A shortcut to anywhere.</h2>
-    <p class="lede reveal">Press Ctrl+K to search open tabs in every Space, your bookmarks and history, or jump straight to the web.</p>
-    <div class="monitor reveal-scale">
-      <div class="panel"><img src="assets/mica-spotlight.png" alt="Spotlight search open over a Mica window" loading="lazy" width="1280" height="840"></div>
-      <div class="neck" aria-hidden="true"></div>
-      <div class="foot" aria-hidden="true"></div>
+  <!-- Words light up one by one as the paragraph scrolls through the screen. -->
+  <section class="statement" aria-label="What Mica does">
+    <p class="statement-text" data-words>Mica blocks ads before they load. It keeps your passwords encrypted on this PC. And it puts every tab, in every Space, one keystroke away.</p>
+  </section>
+
+  <!-- Spotlight: Ctrl and K press down, Spotlight opens on the monitor, then the camera moves in. -->
+  <section id="spotlight" class="keys" aria-label="Spotlight">
+    <div class="keys-sticky">
+      <div class="keys-head">
+        <p class="eyebrow">Spotlight</p>
+        <h2>A shortcut to anywhere.</h2>
+      </div>
+      <div class="keycaps" aria-hidden="true"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>K</kbd></div>
+      <div class="monitor keys-monitor">
+        <div class="panel">
+          <div class="layers">
+            <img src="assets/mica-home.png" alt="" class="layer-before" loading="lazy" width="1280" height="840">
+            <img src="assets/mica-spotlight.png" alt="Spotlight search open over a Mica window" class="layer-after" loading="lazy" width="1280" height="840">
+          </div>
+        </div>
+        <div class="neck" aria-hidden="true"></div>
+        <div class="foot" aria-hidden="true"></div>
+      </div>
+      <p class="keys-caption">Search open tabs in every Space, your bookmarks and history, or jump straight to the web.</p>
     </div>
   </section>
 
@@ -171,6 +186,28 @@
         </div>
         <img src="assets/mica-private.png" alt="A private Mica window" loading="lazy" class="shot-float">
       </article>
+    </div>
+  </section>
+
+  <!-- Light to dark: a bright edge sweeps across the laptop and the page darkens with it. -->
+  <section class="themes" aria-label="Light and dark themes">
+    <div class="themes-sticky">
+      <div class="themes-head">
+        <p class="eyebrow">Themes</p>
+        <h2>Light by day.<br>Dark by night.</h2>
+      </div>
+      <div class="laptop themes-laptop">
+        <div class="lid">
+          <span class="camera" aria-hidden="true"></span>
+          <div class="display layers">
+            <img src="assets/mica-home.png" alt="Mica in its light theme" class="layer-before" loading="lazy" width="1280" height="840">
+            <img src="assets/mica-dark.png" alt="Mica in its dark theme" class="layer-after" loading="lazy" width="1280" height="840">
+            <span class="sweep" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="base" aria-hidden="true"><span class="notch"></span></div>
+      </div>
+      <p class="themes-caption">Mica follows Windows, or the theme you pick. Private windows match it too.</p>
     </div>
   </section>
 
