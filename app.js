@@ -166,6 +166,63 @@
     $("[data-releases]").innerHTML = '<li class="muted">Release notes are unavailable right now.</li>';
   });
 
+  // Close-up intro: as the pinned stage scrolls, a beam of light comes down, the new tab fades in zoomed
+  // into its clock (blurred, then pulled into focus), and the camera pulls back to the whole laptop.
+  (function closeup() {
+    var section = $(".closeup");
+    if (!section || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    section.classList.add("animated");
+    var device = section.querySelector(".closeup-device"), img = device.querySelector("img");
+    var head = section.querySelector(".closeup-head"), caption = section.querySelector(".closeup-caption");
+    var line = section.querySelector(".beam-line"), cone = section.querySelector(".beam-cone"), spot = section.querySelector(".beam-spot");
+    var fx = parseFloat(device.dataset.focusX), fy = parseFloat(device.dataset.focusY);
+    var W, H, focus, zoom, queued = false;
+
+    function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+    function span(p, a, b) { return clamp((p - a) / (b - a)); }      // 0..1 while p runs from a to b
+    function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function measure() {
+      device.style.transform = "none";
+      var d = device.getBoundingClientRect(), i = img.getBoundingClientRect();
+      W = d.width; H = d.height;
+      focus = { x: i.left - d.left + fx * i.width, y: i.top - d.top + fy * i.height };
+      // Zoom until the clock (about 16% of the picture's width) fills roughly half the screen.
+      zoom = Math.max(2.5, Math.min(5, (0.5 * window.innerWidth) / (0.16 * i.width)));
+      queued = false; render();
+    }
+
+    function render() {
+      queued = false;
+      var r = section.getBoundingClientRect(), travel = r.height - window.innerHeight;
+      var p = clamp(-r.top / travel);
+      var beamIn = span(p, 0, .12), beamOut = span(p, .22, .32);
+      line.style.transform = "scaleY(" + beamIn + ")";
+      line.style.opacity = 1 - beamOut;
+      cone.style.opacity = spot.style.opacity = span(p, .05, .14) * (1 - beamOut);
+
+      var t = ease(span(p, .32, .82));
+      var s = lerp(zoom, 1, t), cx = lerp(focus.x, W / 2, t), cy = lerp(focus.y, H / 2, t);
+      device.style.transform = "translate(" + (-cx * s) + "px," + (-cy * s) + "px) scale(" + s + ")";
+      device.style.opacity = span(p, .14, .26);
+      var light = span(p, .14, .36);
+      device.style.filter = light < 1 ? "brightness(" + lerp(.35, 1, light) + ") blur(" + lerp(8, 0, light) + "px)" : "none";
+
+      var headIn = span(p, .16, .24), headOut = span(p, .40, .48);
+      head.style.opacity = headIn * (1 - headOut);
+      head.style.transform = "translateY(" + lerp(16, 0, headIn) + "px)";
+      var capIn = span(p, .82, .92);
+      caption.style.opacity = capIn;
+      caption.style.transform = "translateY(" + lerp(16, 0, capIn) + "px)";
+    }
+    function queue() { if (!queued) { queued = true; window.requestAnimationFrame(render); } }
+
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", function () { window.requestAnimationFrame(measure); });
+    if (img.complete) measure(); else img.addEventListener("load", measure);
+  })();
+
   // Fade sections in as they scroll into view.
   var targets = $all(".reveal, .reveal-scale");
   if (!("IntersectionObserver" in window)) { targets.forEach(function (el) { el.classList.add("in"); }); return; }

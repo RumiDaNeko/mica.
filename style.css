@@ -94,6 +94,25 @@ h2 { font-size: clamp(36px, 6vw, 64px); line-height: 1.06; }
 }
 .notch { display: block; width: 14%; height: 45%; margin: 0 auto; background: linear-gradient(180deg, var(--metal-3), var(--metal-2)); border-radius: 0 0 12px 12px; opacity: .55; }
 
+/* ---------- Close-up intro ---------- */
+/* Always black, like a product film; space grey hardware in both themes. */
+main > section.closeup { padding: 0; margin-top: clamp(80px, 12vw, 150px); background: #000; color: #f5f5f7; --metal-1: #5a5a60; --metal-2: #3a3a3e; --metal-3: #1f1f22; --shadow: 0 30px 80px -20px rgba(0, 0, 0, .9); }
+.closeup-sticky { position: relative; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: clamp(72px, 10vw, 120px) 16px; overflow: hidden; }
+.closeup .eyebrow { color: #c9b3ea; }
+.closeup-device { width: min(980px, 86vw); transform-origin: 0 0; }
+.closeup-caption { margin: 0; max-width: 560px; font-size: clamp(19px, 2.3vw, 24px); line-height: 1.38; font-weight: 500; color: #a1a1a6; }
+.beam { display: none; }
+/* Scroll-driven version (app.js adds .animated): the stage pins while the section scrolls past. */
+.closeup.animated { height: 380vh; }
+.closeup.animated .closeup-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: block; padding: 0; }
+.closeup.animated .closeup-head { position: absolute; left: 0; right: 0; top: 13vh; z-index: 2; padding: 0 16px; opacity: 0; }
+.closeup.animated .closeup-device { position: absolute; left: 50%; top: 50%; opacity: 0; will-change: transform, opacity; }
+.closeup.animated .closeup-caption { position: absolute; left: 0; right: 0; bottom: 7vh; margin: 0 auto; padding: 0 16px; opacity: 0; z-index: 2; }
+.closeup.animated .beam { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.beam-line { position: absolute; left: 50%; top: 0; width: 2px; height: 46vh; margin-left: -1px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff); box-shadow: 0 0 18px 4px rgba(255, 255, 255, .45); transform-origin: top; transform: scaleY(0); }
+.beam-cone { position: absolute; left: 50%; top: 0; width: 70vw; height: 80vh; margin-left: -35vw; background: radial-gradient(60% 100% at 50% 0%, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 70%); opacity: 0; }
+.beam-spot { position: absolute; left: 50%; top: 46vh; width: 18vw; height: 4vh; margin: -2vh 0 0 -9vw; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); filter: blur(4px); opacity: 0; }
+
 /* ---------- Monitor frame ---------- */
 .monitor { max-width: 960px; margin: clamp(44px, 6vw, 72px) auto 0; }
 .panel { background: var(--bezel); padding: clamp(7px, 1.1vw, 14px); border-radius: clamp(10px, 1.6vw, 20px); box-shadow: 0 0 0 clamp(1px, .2vw, 2px) var(--metal-2), var(--shadow); }
