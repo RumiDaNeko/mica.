@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mica Browser: less noise, more internet</title>
-<meta name="description" content="Mica is a calm, Arc-inspired browser for Windows with Spaces, Spotlight search and a built-in password vault.">
+<meta name="description" content="Mica is a calm, Arc-inspired browser for Windows with Spaces, Spotlight search, ad blocking and a built-in password vault.">
 <link rel="canonical" href="https://lessnoise.online/">
-<meta name="theme-color" content="#2b2438">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mica">
@@ -29,7 +30,7 @@
   "name": "Mica",
   "operatingSystem": "Windows 10, Windows 11",
   "applicationCategory": "BrowserApplication",
-  "description": "A calm, Arc-inspired browser for Windows with Spaces, Spotlight search and a built-in password vault.",
+  "description": "A calm, Arc-inspired browser for Windows with Spaces, Spotlight search, ad blocking and a built-in password vault.",
   "url": "https://lessnoise.online/",
   "image": "https://lessnoise.online/assets/og-image.png",
   "downloadUrl": "https://github.com/RumiDaNeko/mica./releases/latest",
@@ -40,82 +41,158 @@
 <link rel="icon" href="assets/Mica.ico">
 <link rel="apple-touch-icon" href="assets/Mica.png">
 <link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
 <header class="nav">
-  <a class="brand" href="#top"><img src="assets/Mica.png" alt="" width="28" height="28"><span>Mica.</span></a>
-  <nav>
-    <a href="#features">Features</a>
-    <a href="#gallery">Gallery</a>
-    <a href="#releases">Releases</a>
-    <a class="btn btn-small" href="#download" data-download>Download</a>
-  </nav>
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="Mica home"><img src="assets/Mica.png" alt="" width="22" height="22"><span>Mica.</span></a>
+    <nav aria-label="Sections">
+      <a href="#spotlight">Spotlight</a>
+      <a href="#features">Features</a>
+      <a href="#releases">What's new</a>
+    </nav>
+    <a class="pill pill-small" href="#download">Download</a>
+  </div>
 </header>
 
 <main id="top">
+  <!-- Hero: the product on a laptop, Apple-style. -->
   <section class="hero">
-    <p class="eyebrow"><span class="dot"></span>Room to think</p>
-    <h1>Less noise.<br><em>More internet.</em></h1>
-    <p class="lede">Mica is a calm browser for Windows. Spaces keep work and life apart, and Spotlight finds any tab in a keystroke.</p>
-    <div class="cta" id="download">
-      <a class="btn" href="https://github.com/RumiDaNeko/mica./releases/latest" data-download>
+    <p class="eyebrow reveal">Mica for Windows</p>
+    <h1 class="reveal">Less noise.<br><span class="tint">More internet.</span></h1>
+    <p class="lede reveal">A calm browser that keeps work and life apart, and finds any tab in a keystroke.</p>
+    <div class="cta reveal">
+      <a class="pill" href="https://github.com/RumiDaNeko/mica./releases/latest" data-primary>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>
-        <span data-label>Download for Windows</span>
+        <span data-primary-label>Download for Windows</span>
       </a>
-      <p class="meta" data-meta>Checking GitHub for the latest version…</p>
+      <a class="link" href="#download">Other download options ›</a>
     </div>
-    <figure class="shot shot-hero">
-      <picture>
-        <source srcset="assets/mica-dark.png" media="(prefers-color-scheme: dark)">
-        <img src="assets/mica-home.png" alt="Mica home page with sidebar, clock and search box" width="1280" height="840">
-      </picture>
-    </figure>
+    <p class="meta reveal" data-meta>Free · Windows 10 and 11</p>
+
+    <div class="stage reveal-scale">
+      <div class="laptop">
+        <div class="lid">
+          <span class="camera" aria-hidden="true"></span>
+          <div class="display">
+            <picture>
+              <source srcset="assets/mica-personal-home.png" media="(prefers-color-scheme: dark)">
+              <img src="assets/mica-home.png" alt="Mica's home page with the sidebar, a clock and a search box" width="1280" height="840">
+            </picture>
+          </div>
+        </div>
+        <div class="base" aria-hidden="true"><span class="notch"></span></div>
+      </div>
+    </div>
   </section>
 
+  <!-- Spotlight on a desktop monitor. -->
+  <section id="spotlight" class="showcase">
+    <p class="eyebrow reveal">Spotlight</p>
+    <h2 class="reveal">A shortcut to anywhere.</h2>
+    <p class="lede reveal">Press Ctrl+K to search open tabs in every Space, your bookmarks and history, or jump straight to the web.</p>
+    <div class="monitor reveal-scale">
+      <div class="panel"><img src="assets/mica-spotlight.png" alt="Spotlight search open over a Mica window" loading="lazy" width="1280" height="840"></div>
+      <div class="neck" aria-hidden="true"></div>
+      <div class="foot" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Feature tiles. -->
   <section id="features" class="features">
-    <h2>Built for focus</h2>
-    <div class="grid">
-      <article><h3>Spotlight</h3><p>Ctrl+K searches open tabs in every Space, bookmarks and history, or jumps straight to the web.</p></article>
-      <article><h3>Spaces &amp; groups</h3><p>Separate Personal and Work, pin what matters, and fold tabs into colored groups.</p></article>
-      <article><h3>Passwords &amp; sync</h3><p>An encrypted vault with Windows Hello unlock and optional sync across your devices.</p></article>
-      <article><h3>Chrome extensions</h3><p>Click <em>Add to Mica</em> on the Chrome Web Store and Mica verifies and installs it for you.</p></article>
-      <article><h3>Built-in tools</h3><p>Find in page, a themed print dialog, DevTools and a task manager that can rest idle tabs.</p></article>
-      <article><h3>Updates itself</h3><p>New releases download in the background, are checked against GitHub's SHA-256 digest, and install on restart.</p></article>
+    <h2 class="reveal">Everything you need.<br><span class="muted">Nothing you don't.</span></h2>
+    <div class="bento">
+      <article class="tile tile-wide reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Privacy</p>
+          <h3>Ads and trackers, gone.</h3>
+          <p>Built-in blocking with uBlock Origin Lite's lists. Allow a site in one click when you want to support it.</p>
+        </div>
+        <img src="assets/ad-blocking.png" alt="Ad blocking settings with filter lists" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-tall reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Spaces</p>
+          <h3>Work here. Life there.</h3>
+          <p>Pin what matters and fold tabs into colored groups.</p>
+        </div>
+        <img src="assets/tabs-grouped.png" alt="Sidebar with pinned tabs and a tab group" loading="lazy" class="shot-sidebar">
+      </article>
+      <article class="tile reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Passwords &amp; sync</p>
+          <h3>Locked to you.</h3>
+          <p>Encrypted on your device, unlocked with Windows Hello.</p>
+        </div>
+        <img src="assets/mica-vault.png" alt="Passwords and sync vault" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-dark reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Extensions</p>
+          <h3>Your favorite tools.</h3>
+          <p>Choose Add to Mica on the Chrome Web Store.</p>
+        </div>
+        <img src="assets/mica-extensions-v0111-dark.png" alt="Extensions manager" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Task manager</p>
+          <h3>Rest heavy tabs.</h3>
+          <p>See memory and CPU per process. Shift+Esc.</p>
+        </div>
+        <img src="assets/mica-task-manager.png" alt="Browser task manager" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-wide reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Private windows</p>
+          <h3>Leaves nothing behind.</h3>
+          <p>Cookies and history stay isolated and vanish when you close the window.</p>
+        </div>
+        <img src="assets/mica-private.png" alt="A private Mica window" loading="lazy" class="shot-float">
+      </article>
     </div>
   </section>
 
-  <section id="gallery" class="gallery">
-    <h2>A closer look</h2>
-    <div class="shots">
-      <figure class="shot wide"><img src="assets/mica-spotlight.png" alt="Spotlight search overlay" loading="lazy"><figcaption>Spotlight: a shortcut to anywhere.</figcaption></figure>
-      <figure class="shot"><img src="assets/mica-vault.png" alt="Passwords and sync vault" loading="lazy"><figcaption>Passwords, encrypted on your device.</figcaption></figure>
-      <figure class="shot"><img src="assets/mica-extensions-v0111-dark.png" alt="Extensions manager in dark theme" loading="lazy"><figcaption>Extensions from the Chrome Web Store.</figcaption></figure>
-      <figure class="shot"><img src="assets/mica-task-manager.png" alt="Browser task manager" loading="lazy"><figcaption>Task manager with per-process memory and CPU.</figcaption></figure>
-      <figure class="shot"><img src="assets/mica-downloads.png" alt="Downloads page" loading="lazy"><figcaption>Downloads, in the same quiet style.</figcaption></figure>
-      <figure class="shot tall"><img src="assets/tabs-grouped.png" alt="Sidebar with pinned tabs and a tab group" loading="lazy"><figcaption>Pinned tabs and groups.</figcaption></figure>
-      <figure class="shot wide2"><img src="assets/mica-private.png" alt="Private window" loading="lazy"><figcaption>Private windows keep nothing.</figcaption></figure>
+  <!-- Download options. -->
+  <section id="download" class="download">
+    <p class="eyebrow reveal">Download</p>
+    <h2 class="reveal">Get Mica.</h2>
+    <p class="lede reveal" data-version-line>Free for Windows 10 and 11 (64-bit).</p>
+    <div class="options">
+      <article class="option reveal" data-option="lite">
+        <span class="badge" hidden>Recommended for you</span>
+        <h3>Mica <span class="muted">Lite</span></h3>
+        <p class="size" data-size>Small download</p>
+        <p>Uses the web engine already built into Windows. Best for Windows 11 and up-to-date Windows 10.</p>
+        <a class="pill" href="https://github.com/RumiDaNeko/mica./releases/latest" data-link>Download Lite</a>
+      </article>
+      <article class="option reveal" data-option="full">
+        <span class="badge" hidden>Recommended for you</span>
+        <h3>Mica</h3>
+        <p class="size" data-size>Full installer</p>
+        <p>Brings its own web engine, so it works on any Windows 10 or 11 PC, even without WebView2.</p>
+        <a class="pill pill-quiet" href="https://github.com/RumiDaNeko/mica./releases/latest" data-link>Download</a>
+      </article>
     </div>
+    <p class="fine reveal">Already using Mica? It updates itself. The installers aren't code-signed yet, so Windows may show <em>Unknown publisher</em>. <a class="link" href="https://github.com/RumiDaNeko/mica./releases/latest" data-release-link>Checksums and release files ›</a></p>
   </section>
 
   <section id="releases" class="releases">
-    <h2>Recent releases</h2>
+    <h2 class="reveal">What's new.</h2>
     <ol class="release-list" data-releases><li class="muted">Loading release notes from GitHub…</li></ol>
-    <p><a class="link" href="https://github.com/RumiDaNeko/mica./releases">All releases on GitHub →</a></p>
-  </section>
-
-  <section class="req">
-    <h2>Requirements</h2>
-    <p>Windows 10 or 11, x64. The installer bundles the WebView2 engine and installs for the current user — no admin rights needed. It isn't code-signed yet, so Windows may show <em>Unknown publisher</em>.</p>
+    <p><a class="link" href="https://github.com/RumiDaNeko/mica./releases">All releases on GitHub ›</a></p>
   </section>
 </main>
 
 <footer>
-  <span class="wordmark">Mica.</span>
-  <span>Less noise. More internet.</span>
-  <a href="https://github.com/RumiDaNeko/mica.">GitHub</a>
+  <div class="foot-inner">
+    <span class="wordmark">Mica.</span>
+    <span>Less noise. More internet.</span>
+    <a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a>
+  </div>
 </footer>
 
-<dialog class="lightbox" data-lightbox><img alt=""></dialog>
 <script src="app.js"></script>
 </body>
 </html>

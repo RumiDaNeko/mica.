@@ -1,9 +1,9 @@
-// Fills the download button and release list from GitHub's API for Mica's release repo.
+// Fills the download buttons and release notes from GitHub's API for Mica's release repo.
 // The repo name ends in a dot ("mica."), so the API is reached by numeric id like AppUpdater.cs does.
 (function () {
   var REPO_URL = "https://github.com/RumiDaNeko/mica.";
   var API = "https://api.github.com/repositories/1432309505/releases";
-  var CACHE_KEY = "mica-releases";
+  var CACHE_KEY = "mica-releases-v2";
   var CACHE_MS = 10 * 60 * 1000; // unauthenticated API allows 60 requests/hour per IP
 
   function $(sel) { return document.querySelector(sel); }
@@ -16,9 +16,11 @@
     return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
   function versionOf(release) { return release.tag_name.replace(/^v/i, ""); }
-  function installerOf(release) {
-    return (release.assets || []).filter(function (a) { return /setup\.exe$/i.test(a.name); })[0]
-      || (release.assets || []).filter(function (a) { return /\.(exe|msi|zip)$/i.test(a.name); })[0];
+  // Mica-<v>-Setup.exe brings its own engine; Mica-<v>-Setup-Lite.exe uses Windows' WebView2.
+  // Mica-<v>-Update.exe is only for the built-in updater, so it is never offered here.
+  function pick(assets, pattern) {
+    var a = (assets || []).filter(function (x) { return pattern.test(x.name); })[0];
+    return a ? { name: a.name, size: a.size, url: a.browser_download_url } : null;
   }
 
   function readCache() {
@@ -42,11 +44,10 @@
       })
       .then(function (list) {
         var data = list.filter(function (r) { return !r.draft; }).map(function (r) {
-          var a = installerOf(r);
           return {
             tag_name: r.tag_name, name: r.name, html_url: r.html_url, body: r.body || "",
             published_at: r.published_at, prerelease: r.prerelease,
-            asset: a ? { name: a.name, size: a.size, url: a.browser_download_url, digest: a.digest || "" } : null
+            full: pick(r.assets, /-Setup\.exe$/i), lite: pick(r.assets, /-Setup-Lite\.exe$/i)
           };
         });
         writeCache(data);
@@ -54,19 +55,48 @@
       });
   }
 
-  function renderDownload(latest) {
+  // Windows 11 always ships WebView2, so it can take the small installer. Browsers only tell us that
+  // through User-Agent Client Hints (Chromium); anything unsure gets the full installer, which always works.
+  function platform() {
+    var uad = navigator.userAgentData;
+    if (uad && uad.getHighEntropyValues) {
+      return uad.getHighEntropyValues(["platformVersion"]).then(function (v) {
+        return { windows: uad.platform === "Windows", win11: uad.platform === "Windows" && parseInt(v.platformVersion, 10) >= 13 };
+      }).catch(function () { return { windows: uad.platform === "Windows", win11: false }; });
+    }
+    return Promise.resolve({ windows: /Windows NT/.test(navigator.userAgent), win11: false });
+  }
+
+  function renderDownloads(latest, where) {
     var v = versionOf(latest);
-    $all("[data-download]").forEach(function (el) { el.href = latest.asset ? latest.asset.url : latest.html_url; });
-    $("[data-label]").textContent = "Download Mica " + v;
+    var choice = latest.lite && where.win11 ? "lite" : "full";
+    var chosen = latest[choice] || latest.full || latest.lite;
+
+    var primary = $("[data-primary]");
+    primary.href = chosen ? chosen.url : latest.html_url;
+    $("[data-primary-label]").textContent = "Download Mica " + v;
+
     var meta = $("[data-meta]");
-    meta.textContent = "";
-    var parts = ["Windows x64", formatDate(latest.published_at)];
-    if (latest.asset) parts.splice(1, 0, formatSize(latest.asset.size));
-    meta.appendChild(document.createTextNode(parts.join(" · ") + " · "));
-    var notes = document.createElement("a");
-    notes.href = latest.html_url;
-    notes.textContent = "release notes";
-    meta.appendChild(notes);
+    if (!where.windows) meta.textContent = "Mica is for Windows 10 and 11 PCs · Version " + v;
+    else if (chosen === latest.lite) meta.textContent = "Lite installer for Windows 11 · " + formatSize(chosen.size) + " · Version " + v;
+    else meta.textContent = (chosen ? formatSize(chosen.size) + " · " : "") + "Windows 10 and 11 · Version " + v;
+
+    $("[data-version-line]").textContent = "Version " + v + ", released " + formatDate(latest.published_at) + ". Free for Windows 10 and 11 (64-bit).";
+    $all("[data-release-link]").forEach(function (a) { a.href = latest.html_url; });
+
+    ["lite", "full"].forEach(function (kind) {
+      var card = $('[data-option="' + kind + '"]'), asset = latest[kind];
+      if (!asset) { card.hidden = true; return; }
+      card.querySelector("[data-link]").href = asset.url;
+      card.querySelector("[data-size]").textContent = formatSize(asset.size);
+      var recommended = asset === chosen && where.windows;
+      card.classList.toggle("recommended", recommended);
+      card.querySelector(".badge").hidden = !recommended;
+      var link = card.querySelector("[data-link]");
+      link.classList.toggle("pill-quiet", !recommended && !!latest.lite);
+    });
+    if (!latest.lite) $(".options").style.gridTemplateColumns = "minmax(0, 420px)";
+    if (!latest.lite) $(".options").style.justifyContent = "center";
   }
 
   function renderReleases(list) {
@@ -80,7 +110,6 @@
       var a = document.createElement("a");
       a.href = r.html_url;
       a.textContent = r.name || ("Mica " + versionOf(r));
-      a.style.textDecoration = "none";
       h.appendChild(a);
       head.appendChild(h);
       if (i === 0 && !r.prerelease) head.appendChild(badge("Latest"));
@@ -93,7 +122,11 @@
       var notes = document.createElement("div");
       notes.className = "notes";
       // Plain text on purpose: release bodies are Markdown we don't render, and never HTML we trust.
-      notes.textContent = r.body.replace(/\r/g, "").replace(/^#+\s*/gm, "").replace(/\*\*/g, "").trim();
+      var text = r.body.replace(/\r/g, "").replace(/^#+\s*/gm, "").replace(/\*\*/g, "").trim();
+      // Release bodies often open with the release name again; the card already shows it.
+      var first = text.split("\n")[0].trim();
+      if (r.name && first.indexOf(r.name) === 0) text = text.slice(text.indexOf("\n") + 1).trim();
+      notes.textContent = text;
       li.appendChild(notes);
       ol.appendChild(li);
       if (notes.textContent.split("\n").length > 6) {
@@ -102,8 +135,8 @@
         more.className = "more";
         more.textContent = "Show all notes";
         more.addEventListener("click", function () {
-          var open = notes.classList.toggle("clamped");
-          more.textContent = open ? "Show all notes" : "Show less";
+          var closed = notes.classList.toggle("clamped");
+          more.textContent = closed ? "Show all notes" : "Show less";
         });
         li.appendChild(more);
       }
@@ -111,36 +144,33 @@
   }
   function badge(text) {
     var s = document.createElement("span");
-    s.className = "badge";
+    s.className = "badge-inline";
     s.textContent = text;
     return s;
   }
 
-  load().then(function (list) {
+  Promise.all([load(), platform()]).then(function (results) {
+    var list = results[0];
     var latest = list.filter(function (r) { return !r.prerelease; })[0] || list[0];
     if (!latest) throw new Error("No releases yet");
-    renderDownload(latest);
+    renderDownloads(latest, results[1]);
     renderReleases(list);
   }).catch(function () {
     var meta = $("[data-meta]");
     meta.textContent = "Couldn't reach GitHub. ";
     var a = document.createElement("a");
+    a.className = "link";
     a.href = REPO_URL + "/releases/latest";
     a.textContent = "Get the latest release on GitHub";
     meta.appendChild(a);
     $("[data-releases]").innerHTML = '<li class="muted">Release notes are unavailable right now.</li>';
   });
 
-  // Click a gallery screenshot to view it full size.
-  var box = $("[data-lightbox]");
-  if (box && box.showModal) {
-    $all(".gallery .shot img").forEach(function (img) {
-      img.addEventListener("click", function () {
-        box.querySelector("img").src = img.src;
-        box.querySelector("img").alt = img.alt;
-        box.showModal();
-      });
-    });
-    box.addEventListener("click", function () { box.close(); });
-  }
+  // Fade sections in as they scroll into view.
+  var targets = $all(".reveal, .reveal-scale");
+  if (!("IntersectionObserver" in window)) { targets.forEach(function (el) { el.classList.add("in"); }); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+  targets.forEach(function (el) { io.observe(el); });
 })();
