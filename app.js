@@ -3,7 +3,7 @@
 (function () {
   var REPO_URL = "https://github.com/RumiDaNeko/mica.";
   var API = "https://api.github.com/repositories/1432309505/releases";
-  var CACHE_KEY = "mica-releases-v2";
+  var CACHE_KEY = "mica-releases-v3";
   var CACHE_MS = 10 * 60 * 1000; // unauthenticated API allows 60 requests/hour per IP
 
   function $(sel) { return document.querySelector(sel); }
@@ -16,11 +16,25 @@
     return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
   function versionOf(release) { return release.tag_name.replace(/^v/i, ""); }
-  // Mica-<v>-Setup.exe brings its own engine; Mica-<v>-Setup-Lite.exe uses Windows' WebView2.
-  // Mica-<v>-Update.exe is only for the built-in updater, so it is never offered here.
+  // Release files by platform. Mica-<v>-Setup.exe brings its own engine; Mica-<v>-Setup-Lite.exe uses Windows'
+  // WebView2; Mica-<v>-Update.exe is only for the built-in updater, so it is never offered here. A platform
+  // without a file in the latest release shows as coming soon.
+  var ASSETS = {
+    full: /-Setup\.exe$/i,
+    lite: /-Setup-Lite\.exe$/i,
+    "mac-arm": /-(arm64|aarch64)\.dmg$/i,
+    "mac-intel": /-(x64|x86_64|intel)\.dmg$/i,
+    linux: /\.AppImage$/i,
+    android: /\.apk$/i
+  };
   function pick(assets, pattern) {
     var a = (assets || []).filter(function (x) { return pattern.test(x.name); })[0];
     return a ? { name: a.name, size: a.size, url: a.browser_download_url } : null;
+  }
+  function files(assets) {
+    var out = {};
+    Object.keys(ASSETS).forEach(function (k) { out[k] = pick(assets, ASSETS[k]); });
+    return out;
   }
 
   function readCache() {
@@ -47,7 +61,7 @@
           return {
             tag_name: r.tag_name, name: r.name, html_url: r.html_url, body: r.body || "",
             published_at: r.published_at, prerelease: r.prerelease,
-            full: pick(r.assets, /-Setup\.exe$/i), lite: pick(r.assets, /-Setup-Lite\.exe$/i)
+            files: files(r.assets)
           };
         });
         writeCache(data);
@@ -55,48 +69,84 @@
       });
   }
 
-  // Windows 11 always ships WebView2, so it can take the small installer. Browsers only tell us that
-  // through User-Agent Client Hints (Chromium); anything unsure gets the full installer, which always works.
+  // Which device is this? Chromium tells us through User-Agent Client Hints (including a Mac's chip and
+  // the Windows version); other browsers only through the user agent. Unsure means no guess.
   function platform() {
-    var uad = navigator.userAgentData;
-    if (uad && uad.getHighEntropyValues) {
-      return uad.getHighEntropyValues(["platformVersion"]).then(function (v) {
-        return { windows: uad.platform === "Windows", win11: uad.platform === "Windows" && parseInt(v.platformVersion, 10) >= 13 };
-      }).catch(function () { return { windows: uad.platform === "Windows", win11: false }; });
-    }
-    return Promise.resolve({ windows: /Windows NT/.test(navigator.userAgent), win11: false });
+    var ua = navigator.userAgent, uad = navigator.userAgentData;
+    var touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    var base = {
+      os: /iPhone|iPad|iPod/.test(ua) || touchMac ? "ios" : /Android/.test(ua) ? "android" : /Windows NT/.test(ua) ? "windows" : /Macintosh/.test(ua) ? "mac" : /Linux|X11|CrOS/.test(ua) ? "linux" : "",
+      win11: false, arm: null
+    };
+    if (!uad || !uad.getHighEntropyValues) return Promise.resolve(base);
+    return uad.getHighEntropyValues(["platformVersion", "architecture"]).then(function (v) {
+      var map = { Windows: "windows", macOS: "mac", Linux: "linux", "Chrome OS": "linux", Android: "android" };
+      if (map[uad.platform]) base.os = map[uad.platform];
+      base.win11 = base.os === "windows" && parseInt(v.platformVersion, 10) >= 13;
+      if (v.architecture) base.arm = v.architecture === "arm";
+      return base;
+    }).catch(function () { return base; });
+  }
+
+  var NAMES = { windows: "Windows", mac: "Mac", linux: "Linux", android: "Android", ios: "iPhone" };
+  var CARD = { windows: "windows", mac: "mac", linux: "linux", android: "mobile", ios: "mobile" };
+
+  // The file this device should get: Lite on Windows 11 (it always has WebView2), else Full, which always
+  // works; on a Mac, the chip it reports, else Apple silicon (Safari can't tell, and most Macs now are).
+  function bestFor(f, where) {
+    if (where.os === "windows") return where.win11 && f.lite ? f.lite : f.full || f.lite;
+    if (where.os === "mac") return where.arm === false ? f["mac-intel"] || f["mac-arm"] : f["mac-arm"] || f["mac-intel"];
+    if (where.os === "linux") return f.linux;
+    if (where.os === "android") return f.android;
+    return null;
   }
 
   function renderDownloads(latest, where) {
-    var v = versionOf(latest);
-    var choice = latest.lite && where.win11 ? "lite" : "full";
-    var chosen = latest[choice] || latest.full || latest.lite;
+    var v = versionOf(latest), f = latest.files || {};
+    var chosen = bestFor(f, where), name = NAMES[where.os];
 
-    var primary = $("[data-primary]");
-    primary.href = chosen ? chosen.url : latest.html_url;
-    $("[data-primary-label]").textContent = "Download Mica " + v;
+    var primary = $("[data-primary]"), label = $("[data-primary-label]"), meta = $("[data-meta]");
+    if (chosen) {
+      primary.href = chosen.url;
+      label.textContent = "Download for " + name;
+      var what = chosen === f.lite ? "Lite, for Windows 11" : chosen === f.full ? "Windows 10 and 11" :
+        chosen === f["mac-arm"] ? "Apple silicon" : chosen === f["mac-intel"] ? "Intel Mac" : name;
+      meta.textContent = what + " · " + formatSize(chosen.size) + " · Version " + v;
+    } else {
+      primary.href = "#download";
+      label.textContent = name ? "Mica for " + name : "Download Mica";
+      meta.textContent = name && where.os !== "windows" ? "Mica for " + name + " is coming soon. Version " + v + " is out for other platforms." : "Free · Version " + v;
+    }
 
-    var meta = $("[data-meta]");
-    if (!where.windows) meta.textContent = "Mica is for Windows 10 and 11 PCs · Version " + v;
-    else if (chosen === latest.lite) meta.textContent = "Lite installer for Windows 11 · " + formatSize(chosen.size) + " · Version " + v;
-    else meta.textContent = (chosen ? formatSize(chosen.size) + " · " : "") + "Windows 10 and 11 · Version " + v;
-
-    $("[data-version-line]").textContent = "Version " + v + ", released " + formatDate(latest.published_at) + ". Free for Windows 10 and 11 (64-bit).";
+    var out = [];
+    if (f.full || f.lite) out.push("Windows");
+    if (f["mac-arm"] || f["mac-intel"]) out.push("Mac");
+    if (f.linux) out.push("Linux");
+    if (f.android) out.push("Android");
+    $("[data-version-line]").textContent = "Version " + v + ", released " + formatDate(latest.published_at) + "." + (out.length ? " Free for " + out.join(", ").replace(/, ([^,]*)$/, " and $1") + "." : "");
     $all("[data-release-link]").forEach(function (a) { a.href = latest.html_url; });
 
-    ["lite", "full"].forEach(function (kind) {
-      var card = $('[data-option="' + kind + '"]'), asset = latest[kind];
-      if (!asset) { card.hidden = true; return; }
-      card.querySelector("[data-link]").href = asset.url;
-      card.querySelector("[data-size]").textContent = formatSize(asset.size);
-      var recommended = asset === chosen && where.windows;
-      card.classList.toggle("recommended", recommended);
-      card.querySelector(".badge").hidden = !recommended;
-      var link = card.querySelector("[data-link]");
-      link.classList.toggle("pill-quiet", !recommended && !!latest.lite);
+    var ownCard = $('[data-platform="' + CARD[where.os] + '"]');
+    $all("[data-asset]").forEach(function (link) {
+      var asset = f[link.dataset.asset], size = link.querySelector("[data-size]");
+      if (!asset) {
+        link.classList.add("soon");
+        link.removeAttribute("href");
+        link.setAttribute("aria-disabled", "true");
+        size.textContent = "Coming soon";
+        return;
+      }
+      link.href = asset.url;
+      size.textContent = size.textContent + " · " + formatSize(asset.size);
+      link.classList.toggle("quiet", !!chosen && asset !== chosen && link.closest("[data-platform]") === ownCard);
     });
-    if (!latest.lite) $(".options").style.gridTemplateColumns = "minmax(0, 420px)";
-    if (!latest.lite) $(".options").style.justifyContent = "center";
+    $all("[data-platform]").forEach(function (card) {
+      var mine = card === ownCard;
+      card.classList.toggle("recommended", mine);
+      card.querySelector(".badge").hidden = !mine;
+    });
+    // The device's own platform comes first.
+    if (ownCard && ownCard.parentNode.firstElementChild !== ownCard) ownCard.parentNode.insertBefore(ownCard, ownCard.parentNode.firstElementChild);
   }
 
   function renderReleases(list) {
@@ -166,6 +216,43 @@
     $("[data-releases]").innerHTML = '<li class="muted">Release notes are unavailable right now.</li>';
   });
 
+  // On a Mac, Spotlight is Command+K.
+  if (/Macintosh|Mac OS X/.test(navigator.userAgent)) $all("[data-mod]").forEach(function (k) { k.textContent = "⌘"; });
+
+  // The island: rows come and go while it's on screen, like the real one. With reduced motion every row stays.
+  (function island() {
+    var card = $("[data-island]");
+    if (!card) return;
+    var rows = {};
+    $all("[data-row]").forEach(function (r) { rows[r.dataset.row] = r; });
+    function show(name, on) { rows[name].classList.toggle("on", on); }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { Object.keys(rows).forEach(function (k) { show(k, true); }); return; }
+    var bar = $("[data-dl-bar]"), note = $("[data-dl-note]"), level = $("[data-zoom-level]");
+    function setDownload(pct, text) { bar.style.width = pct + "%"; note.textContent = pct < 100 ? pct + "% · " + text : text; }
+    var steps = [
+      function () { setDownload(12, "1.8 MB/s"); show("download", true); },
+      function () { setDownload(45, "2.3 MB/s"); },
+      function () { setDownload(78, "3.1 MB/s"); },
+      function () { setDownload(100, "Open"); },
+      function () { level.textContent = "110%"; show("zoom", true); },
+      function () { level.textContent = "125%"; },
+      function () { show("download", false); },
+      function () { show("zoom", false); show("media", true); },
+      function () { card.classList.add("away"); },
+      function () { card.classList.remove("away"); },
+      function () { show("media", false); },
+      function () {}
+    ];
+    var i = 0, timer = null;
+    function tick() { steps[i](); i = (i + 1) % steps.length; }
+    function start() { if (!timer) { tick(); timer = setInterval(tick, 1500); } }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    if (!("IntersectionObserver" in window)) { start(); return; }
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) start(); else stop(); });
+    }, { threshold: 0.4 }).observe(card.parentNode);
+  })();
+
   // Scroll scenes, Apple-style: pinned stages whose pictures move with the scroll position. Each pinned
   // scene gets p = 0..1 for how far its section has scrolled past. With reduced motion, or without JS,
   // every scene is a still picture instead.
@@ -179,6 +266,24 @@
     function mix(a, b, t) { return "rgb(" + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], t)); }).join(",") + ")"; }
     function pinned(section) { var r = section.getBoundingClientRect(); return clamp(-r.top / (r.height - window.innerHeight)); }
     function fadeUp(el, t) { el.style.opacity = t; el.style.transform = "translateY(" + lerp(16, 0, t) + "px)"; }
+    // Where a pinned device goes. It is laid out at its full size ("big": as wide as the CSS allows and as
+    // tall as the window under the nav), and scaled down to sit between the heading and the caption while
+    // those show ("fit"). Scenes move between the two, so the device is big whenever nothing else is on screen.
+    function layout(head, device, caption) {
+      var vh = device.parentNode.clientHeight || window.innerHeight, nav = 52;
+      device.style.width = ""; device.style.top = "0px"; device.style.transform = "none";
+      var r = device.getBoundingClientRect(), ratio = r.height / r.width;
+      var big = Math.min(r.width, (vh - nav - 32) / ratio);
+      device.style.width = big + "px";
+      var h = big * ratio;
+      var top = head.offsetTop + head.offsetHeight + 20;
+      var bottom = vh - (caption ? caption.offsetHeight + vh * .06 + 12 : vh * .04);
+      var fit = Math.max(.3, Math.min(1, (bottom - top) / h));
+      return { h: h, fit: fit, fitY: top + h * fit / 2, bigY: nav + (vh - nav) / 2 };
+    }
+    function place(device, L, scale, y) {
+      device.style.transform = "translate(-50%," + (y - L.h / 2) + "px) scale(" + scale + ")";
+    }
     var list = [];
 
     // 1. Hero: the laptop starts nearly closed and its lid opens over the first part of the scroll.
@@ -253,8 +358,8 @@
       var caps = keys.querySelector(".keycaps"), kbds = Array.prototype.slice.call(caps.querySelectorAll("kbd"));
       var monitor = keys.querySelector(".keys-monitor"), after = keys.querySelector(".layer-after");
       var head = keys.querySelector(".keys-head"), caption = keys.querySelector(".keys-caption");
-      monitor.style.transformOrigin = "50% 36%";
-      list.push({ render: function () {
+      var L = null;
+      list.push({ measure: function () { L = layout(head, monitor, null); }, render: function () {
         var p = pinned(keys);
         var rise = ease(span(p, .06, .18)), press = span(p, .24, .30), gone = span(p, .36, .44);
         caps.style.opacity = rise * (1 - gone);
@@ -265,7 +370,8 @@
         });
         after.style.opacity = span(p, .28, .38);
         var settle = ease(span(p, 0, .2)), zoomIn = ease(span(p, .46, .80));
-        monitor.style.transform = "translate(-50%," + lerp(-50, -66, zoomIn) + "%) scale(" + (lerp(.9, 1, settle) * lerp(1, 1.18, zoomIn)) + ")";
+        // Into Spotlight's search box: past full size, with the screen's upper part in the middle of the window.
+        place(monitor, L, lerp(L.fit * lerp(.94, 1, settle), 1.15, zoomIn), lerp(L.fitY, L.bigY + L.h * .12, zoomIn));
         monitor.style.filter = after.style.opacity < 1 ? "brightness(" + lerp(.8, 1, +after.style.opacity) + ")" : "none";
         head.style.opacity = 1 - span(p, .46, .56);
         fadeUp(caption, span(p, .80, .90));
@@ -278,21 +384,23 @@
       themes.classList.add("animated");
       var laptop = themes.querySelector(".themes-laptop"), after = themes.querySelector(".layer-after"), sweep = themes.querySelector(".sweep");
       var caption = themes.querySelector(".themes-caption"), head = themes.querySelector(".themes-head"), eyebrow = head.querySelector(".eyebrow");
-      list.push({ render: function () {
+      var L = null;
+      list.push({ measure: function () { L = layout(head, laptop, caption); }, render: function () {
         var p = pinned(themes);
         var wipe = ease(span(p, .22, .70)), edge = lerp(100, 0, wipe);
         after.style.clipPath = "inset(0 0 0 " + edge + "%)";
         sweep.style.left = edge + "%";
         sweep.style.opacity = span(p, .18, .24) * (1 - span(p, .70, .76));
-        laptop.style.transform = "translate(-50%,-50%) scale(" + lerp(.92, 1, ease(span(p, 0, .2))) + ")";
+        var grow = ease(span(p, .08, .22)), back = ease(span(p, .72, .80));
+        place(laptop, L, lerp(lerp(L.fit * .94, L.fit, ease(span(p, 0, .08))), 1, grow - back), lerp(L.fitY, L.bigY, grow - back));
         if (!darkPage.matches) {
           themes.style.backgroundColor = mix([251, 251, 253], [0, 0, 0], wipe);
           themes.style.color = mix([29, 29, 31], [245, 245, 247], wipe);
           caption.style.color = mix([110, 110, 115], [161, 161, 166], wipe);
           eyebrow.style.color = mix([107, 79, 143], [201, 179, 234], wipe);
         } else { themes.style.backgroundColor = themes.style.color = caption.style.color = eyebrow.style.color = ""; }
-        head.style.opacity = 1;
-        fadeUp(caption, span(p, .76, .86));
+        head.style.opacity = 1 - span(p, .06, .16) + span(p, .74, .82);
+        fadeUp(caption, span(p, .78, .88));
       } });
     })();
 
